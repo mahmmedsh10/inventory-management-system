@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} {{ inv['invoice_number'] }} — سجل المخزن{% endblock %}
+{% block content %}
+{% set is_purchase = (kind == 'purchase') %}
+<h1>{{ title }} <span class="num">{{ inv['invoice_number'] }}</span>
+  <span class="stamp {{ 'stamp-draft' if inv['status'] == 'مسودة'
+                        else 'stamp-approved' if inv['status'] == 'معتمدة'
+                        else 'stamp-cancelled' }}">{{ inv['status'] }}</span>
+</h1>
+
+<div class="card">
+  <div class="form-grid">
+    <div><label>{{ 'المورد' if is_purchase else 'الجهة' }}</label>{{ inv['supplier_name'] or '—' }}</div>
+    <div><label>التاريخ</label><span class="num">{{ inv['invoice_date'] }}</span></div>
+    <div><label>أنشأها</label>{{ inv['creator'] or '—' }}</div>
+    <div><label>اعتمدها</label>{{ inv['approver'] or '—' }}</div>
+  </div>
+  {% if inv['notes'] %}<div><label>ملاحظات</label>{{ inv['notes'] }}</div>{% endif %}
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>الصنف</th><th class="num">الكمية</th><th class="num">السعر</th>
+        {% if is_purchase %}<th>رقم الدفعة</th><th>تاريخ الصلاحية</th>{% endif %}
+        <th class="num">الإجمالي</th></tr>
+  </thead>
+  <tbody>
+    {% set ns = namespace(total=0) %}
+    {% for d in details %}
+    {% set ns.total = ns.total + d['subtotal'] %}
+    <tr>
+      <td>{{ d['item_name'] }}</td>
+      <td class="num">{{ d['quantity'] }}</td>
+      <td class="num">{{ '%.2f'|format(d['price']) }}</td>
+      {% if is_purchase %}
+      <td class="num">{{ d['batch_number'] or '—' }}</td>
+      <td class="num">{{ d['expiry_date'] or '—' }}</td>
+      {% endif %}
+      <td class="num">{{ '%.2f'|format(d['subtotal']) }}</td>
+    </tr>
+    {% endfor %}
+    <tr><th colspan="{{ 5 if is_purchase else 3 }}">الإجمالي الكلي</th>
+        <th class="num">{{ '%.2f'|format(ns.total) }}</th></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="actions">
+  {% set can_approve = user['can_approve_purchases'] if is_purchase else user['can_approve_disbursements'] %}
+  {% if inv['status'] == 'مسودة' %}
+    <a class="btn btn-warn" href="{{ url_for('purchases.edit' if is_purchase else 'disbursement.edit', invoice_id=inv['invoice_id']) }}">✏️ تعديل</a>
+    {% if can_approve %}
+    <form class="inline" method="post"
+          action="{{ url_for('purchases.approve' if is_purchase else 'disbursement.approve', invoice_id=inv['invoice_id']) }}"
+          onsubmit="return confirm('اعتماد الفاتورة سيؤثر على أرصدة المخزون. متابعة؟')">
+      <button class="btn btn-ok">✔ اعتماد</button>
+    </form>
+    {% endif %}
+    <form class="inline" method="post"
+          action="{{ url_for('purchases.cancel' if is_purchase else 'disbursement.cancel', invoice_id=inv['invoice_id']) }}"
+          onsubmit="return confirm('إلغاء الفاتورة نهائياً؟')">
+      <button class="btn btn-danger">✖ إلغاء</button>
+    </form>
+  {% elif inv['status'] == 'معتمدة' and user['can_unapprove_invoices'] %}
+    <form class="inline" method="post"
+          action="{{ url_for('purchases.unapprove' if is_purchase else 'disbursement.unapprove', invoice_id=inv['invoice_id']) }}"
+          onsubmit="return confirm('إلغاء الاعتماد سيعكس أثر الفاتورة على الأرصدة ويعيدها مسودة للتعديل. متابعة؟')">
+      <button class="btn btn-warn">↩ إلغاء الاعتماد للتعديل</button>
+    </form>
+  {% endif %}
+  <a class="btn btn-ghost" href="{{ url_for('purchases.list' if is_purchase else 'disbursement.list') }}">رجوع للقائمة</a>
+</div>
+{% endblock %}

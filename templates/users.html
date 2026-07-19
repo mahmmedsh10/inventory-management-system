@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}المستخدمون — سجل المخزن{% endblock %}
+{% block content %}
+<h1>المستخدمون</h1>
+<div class="card">
+  <h2>إضافة مستخدم</h2>
+  <form method="post">
+    <div class="form-grid">
+      <div><label>اسم المستخدم *</label><input name="username" required></div>
+      <div><label>الاسم الكامل *</label><input name="full_name" required></div>
+      <div><label>كلمة المرور *</label><input name="password" type="password" required></div>
+      <div><label>الدور *</label>
+        <select name="role_id" required>
+          {% for r in roles %}<option value="{{ r['role_id'] }}">{{ r['role_name'] }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-ok">إضافة</button>
+  </form>
+</div>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>المستخدم</th><th>الاسم</th><th>الدور</th><th>الحالة</th><th></th></tr></thead>
+  <tbody>
+    {% for u in rows %}
+    <tr>
+      <td class="num">{{ u['username'] }}</td>
+      <td>{{ u['full_name'] }}</td>
+      <td>{{ u['role_name'] }}</td>
+      <td>{{ 'نشط ✅' if u['is_active'] else 'معطّل ⛔' }}</td>
+      <td>
+        {% if u['user_id'] != user['user_id'] %}
+        <form class="inline" method="post" action="{{ url_for('users.toggle', user_id=u['user_id']) }}">
+          <button class="btn btn-sm btn-ghost">{{ 'تعطيل' if u['is_active'] else 'تفعيل' }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

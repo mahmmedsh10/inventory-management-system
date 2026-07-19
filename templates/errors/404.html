@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}الصفحة غير موجودة — سجل المخزن{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center; padding:2.5rem 1rem;">
+  <h1>404 — الصفحة غير موجودة</h1>
+  <p style="color:var(--ink-soft); margin:.6rem 0 1.2rem;">
+    الرابط الذي حاولت الوصول إليه غير موجود أو تم نقله.
+  </p>
+  {% if user %}
+  <a class="btn" href="{{ url_for('dashboard.index') }}">العودة للوحة التحكم</a>
+  {% else %}
+  <a class="btn" href="{{ url_for('auth.login') }}">تسجيل الدخول</a>
+  {% endif %}
+</div>
+{% endblock %}

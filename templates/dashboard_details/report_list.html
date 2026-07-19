@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>{{ page_title }}</h1>
+<p style="color:var(--ink-soft); margin-bottom:.8rem;">{{ page_description }}</p>
+
+{# This page is strictly READ-ONLY: reporting data only.
+   No forms, no edit/delete/approve/cancel controls appear below. #}
+<div class="view-only-banner">🔒 عرض للقراءة فقط — لا يمكن التعديل أو الحذف أو الاعتماد من هذه الصفحة</div>
+
+{% if sortable %}
+<div class="actions">
+  <span style="color:var(--ink-soft); font-size:.85rem;">ترتيب حسب الكمية:</span>
+  <a class="btn btn-sm {{ 'btn-ghost' if current_sort != 'desc' else '' }}"
+     href="{{ url_for('dashboard.details_issued_items', sort='desc') }}">الأعلى أولاً ↓</a>
+  <a class="btn btn-sm {{ 'btn-ghost' if current_sort != 'asc' else '' }}"
+     href="{{ url_for('dashboard.details_issued_items', sort='asc') }}">الأقل أولاً ↑</a>
+</div>
+{% endif %}
+
+<div class="search-box">
+  <input type="text" placeholder="🔍 بحث" data-table-search="#report-table" data-search-count="#report-count">
+  <div class="search-count" id="report-count">النتائج: {{ rows|length }}</div>
+</div>
+
+<div class="table-wrap">
+<table id="report-table">
+  <thead>
+    <tr>
+      {% for key, label in columns %}
+      <th{% if key not in ('item_name', 'stock_status') %} class="num"{% endif %}>{{ label }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr data-search-text="{{ row['item_code'] }} {{ row['item_name'] }}">
+      {% for key, label in columns %}
+      <td{% if key not in ('item_name', 'stock_status') %} class="num"{% endif %}>{{ row[key] if row[key] is not none else '—' }}</td>
+      {% endfor %}
+    </tr>
+    {% else %}
+    <tr><td colspan="{{ columns|length }}" style="text-align:center; color:var(--ink-soft);">لا توجد بيانات لعرضها</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="actions">
+  <a class="btn btn-ghost" href="{{ url_for('dashboard.index') }}">رجوع للوحة التحكم</a>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="card">
+  <h2>إضافة {{ kind }}</h2>
+  <form method="post">
+    <div class="form-grid">
+      <div><label>الاسم *</label><input name="{{ name_field }}" required></div>
+      <div><label>الهاتف</label><input name="phone"></div>
+      <div><label>العنوان</label><input name="address"></div>
+    </div>
+    <button class="btn btn-ok">إضافة</button>
+  </form>
+</div>
+<div class="search-box">
+  <input type="text" placeholder="🔍 بحث" data-table-search="#partners-table"
+         data-search-count="#partners-count">
+  <div class="search-count" id="partners-count">النتائج: {{ rows|length }}</div>
+</div>
+<div class="table-wrap">
+<table id="partners-table">
+  <thead><tr><th>الاسم</th><th>الهاتف</th><th>العنوان</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+    <tr data-search-text="{{ r[name_field] }}">
+      <td>{{ r[name_field] }}</td><td class="num">{{ r['phone'] or '' }}</td><td>{{ r['address'] or '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

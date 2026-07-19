@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="card">
+    <h1>📦 سجل المخزن</h1>
+    <form method="post">
+      <div class="form-row">
+        <label for="username">اسم المستخدم</label>
+        <input id="username" name="username" required autofocus>
+      </div>
+      <div class="form-row">
+        <label for="password">كلمة المرور</label>
+        <input id="password" name="password" type="password" required>
+      </div>
+      <button class="btn" style="width:100%">دخول</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

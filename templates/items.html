@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}الأصناف — سجل المخزن{% endblock %}
+{% block content %}
+<h1>الأصناف</h1>
+<div class="actions">
+  <a class="btn" href="{{ url_for('items.new') }}">+ صنف جديد</a>
+</div>
+<div class="search-box">
+  <input type="text" placeholder="🔍 بحث بالاسم (يدعم الاختصارات: «م ر» مثلاً)"
+         data-table-search="#items-table" data-search-count="#items-count">
+  <div class="search-count" id="items-count">النتائج: {{ items|length }}</div>
+</div>
+<div class="table-wrap">
+<table id="items-table">
+  <thead>
+    <tr>
+      <th>الصنف</th><th class="num">الكمية</th><th>الوحدة</th><th class="num">حد التنبيه</th>
+      <th class="num">آخر سعر شراء</th><th>ملاحظات</th><th>إجراءات</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for i in items %}
+    <tr data-search-text="{{ i['item_name'] }}">
+      <td>{{ i['item_name'] }}</td>
+      <td class="num">{{ i['quantity'] }}</td>
+      <td>{{ i['unit'] or 'قطعة' }}</td>
+      <td class="num">{{ i['reorder_level'] }}</td>
+      <td class="num">{{ '%.2f'|format(i['purchase_price'] or 0) }}</td>
+      <td>{{ i['notes'] or '' }}</td>
+      <td>
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('items.edit', item_id=i['item_id']) }}">تعديل</a>
+        {% if user['can_delete_items'] %}
+        <form class="inline" method="post" action="{{ url_for('items.delete', item_id=i['item_id']) }}"
+              onsubmit="return confirm('حذف الصنف {{ i['item_name'] }}؟')">
+          <button class="btn btn-sm btn-danger">حذف</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

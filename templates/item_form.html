@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل صنف' if item else 'صنف جديد' }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>{{ 'تعديل صنف' if item else 'صنف جديد' }}</h1>
+<div class="card">
+<form method="post">
+  <div class="form-row">
+    <label for="item_name">اسم الصنف *</label>
+    <input id="item_name" name="item_name" required value="{{ item['item_name'] if item else '' }}">
+  </div>
+  <div class="form-grid">
+    {% if not item %}
+    <div>
+      <label for="quantity">الكمية الافتتاحية</label>
+      <div class="stepper">
+        <button type="button" data-step="-1">−</button>
+        <input id="quantity" name="quantity" type="number" min="0" value="0">
+        <button type="button" data-step="1">+</button>
+      </div>
+    </div>
+    {% endif %}
+    <div>
+      <label for="reorder_level">حد التنبيه بالنفاد</label>
+      <div class="stepper">
+        <button type="button" data-step="-1">−</button>
+        <input id="reorder_level" name="reorder_level" type="number" min="0"
+               value="{{ item['reorder_level'] if item else 0 }}">
+        <button type="button" data-step="1">+</button>
+      </div>
+    </div>
+    <div>
+      <label for="purchase_price">سعر الشراء</label>
+      <input id="purchase_price" name="purchase_price" type="number" min="0" step="0.01"
+             value="{{ item['purchase_price'] if item else 0 }}"
+             {% if item and not user['can_edit_prices'] %}disabled title="ليست لديك صلاحية تعديل الأسعار"{% endif %}>
+    </div>
+    <div>
+      <label for="unit">الوحدة</label>
+      <input id="unit" name="unit" value="{{ item['unit'] if item and item['unit'] else 'قطعة' }}">
+    </div>
+  </div>
+  <div class="form-row">
+    <label for="notes">ملاحظات</label>
+    <textarea id="notes" name="notes" rows="2">{{ item['notes'] if item else '' }}</textarea>
+  </div>
+  <div class="actions">
+    <button class="btn btn-ok">حفظ</button>
+    <a class="btn btn-ghost" href="{{ url_for('items.list') }}">رجوع</a>
+  </div>
+</form>
+</div>
+{% endblock %}

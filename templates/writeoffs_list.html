@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}أذونات الإعدام — سجل المخزن{% endblock %}
+{% block content %}
+<h1>أذونات الإعدام</h1>
+<p style="color:var(--ink-soft); margin-bottom:.8rem;">
+  الإعدام هو المستند الرسمي لإخراج الأصناف المنتهية الصلاحية أو التالفة من المخزون وتسجيلها كخسارة —
+  يُنشئه أي مستخدم ويعتمده المدير فقط.
+</p>
+<div class="actions">
+  <a class="btn" href="{{ url_for('writeoff.new') }}">+ إذن إعدام جديد</a>
+</div>
+<input type="text" placeholder="🔍 بحث..." 
+       data-table-search="#writeoffs-table" data-search-count="#writeoffs-count">
+<div class="search-count" id="writeoffs-count">النتائج: {{ rows|length }}</div>
+<div class="table-wrap">
+<table id="writeoffs-table">
+  <thead>
+    <tr><th>الرقم</th><th>السبب</th><th>التاريخ</th>
+        <th class="num">قيمة الخسارة</th><th>الحالة</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr data-search-text="{{ r['order_number'] }} {{ r['reason'] }} {{ r['status'] }}">
+      <td class="num">{{ r['order_number'] }}</td>
+      <td>{{ r['reason'] }}</td>
+      <td class="num">{{ r['writeoff_date'] }}</td>
+      <td class="num">{{ '%.2f'|format(r['total']) }}</td>
+      <td>
+        <span class="stamp {{ 'stamp-draft' if r['status'] == 'مسودة'
+                              else 'stamp-approved' if r['status'] == 'معتمدة'
+                              else 'stamp-cancelled' }}">{{ r['status'] }}</span>
+      </td>
+      <td><a class="btn btn-sm btn-ghost" href="{{ url_for('writeoff.view', writeoff_id=r['writeoff_id']) }}">عرض</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}إذن إعدام {{ order['order_number'] }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>إذن إعدام <span class="num">{{ order['order_number'] }}</span>
+  <span class="stamp {{ 'stamp-draft' if order['status'] == 'مسودة'
+                        else 'stamp-approved' if order['status'] == 'معتمدة'
+                        else 'stamp-cancelled' }}">{{ order['status'] }}</span>
+</h1>
+
+<div class="card">
+  <div class="form-grid">
+    <div><label>السبب</label>{{ order['reason'] }}</div>
+    <div><label>التاريخ</label><span class="num">{{ order['writeoff_date'] }}</span></div>
+    <div><label>أنشأه</label>{{ order['creator'] or '—' }}</div>
+    <div><label>اعتمده</label>{{ order['approver'] or '—' }}</div>
+  </div>
+  {% if order['notes'] %}<div><label>ملاحظات</label>{{ order['notes'] }}</div>{% endif %}
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>الصنف</th><th class="num">الكمية</th>
+        <th class="num">تكلفة الوحدة</th><th class="num">قيمة الخسارة</th></tr>
+  </thead>
+  <tbody>
+    {% set ns = namespace(total=0) %}
+    {% for d in details %}
+    {% set ns.total = ns.total + d['subtotal'] %}
+    <tr>
+      <td>{{ d['item_name'] }}</td>
+      <td class="num">{{ d['quantity'] }}</td>
+      <td class="num">{{ '%.2f'|format(d['unit_cost']) }}</td>
+      <td class="num">{{ '%.2f'|format(d['subtotal']) }}</td>
+    </tr>
+    {% endfor %}
+    <tr><th colspan="3">إجمالي الخسارة</th><th class="num">{{ '%.2f'|format(ns.total) }}</th></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="actions">
+  {% if order['status'] == 'مسودة' %}
+    <a class="btn btn-warn" href="{{ url_for('writeoff.edit', writeoff_id=order['writeoff_id']) }}">✏️ تعديل</a>
+    {% if user['can_approve_writeoffs'] %}
+    <form class="inline" method="post" action="{{ url_for('writeoff.approve', writeoff_id=order['writeoff_id']) }}"
+          onsubmit="return confirm('اعتماد الإعدام نهائي ولا يمكن التراجع عنه، وسيخصم الكميات من المخزون. متابعة؟')">
+      <button class="btn btn-ok">✔ اعتماد الإعدام</button>
+    </form>
+    {% else %}
+    <span class="stamp stamp-draft">بانتظار اعتماد المدير</span>
+    {% endif %}
+    <form class="inline" method="post" action="{{ url_for('writeoff.cancel', writeoff_id=order['writeoff_id']) }}"
+          onsubmit="return confirm('إلغاء الإذن نهائياً؟')">
+      <button class="btn btn-danger">✖ إلغاء</button>
+    </form>
+  {% endif %}
+  <a class="btn btn-ghost" href="{{ url_for('writeoff.list') }}">رجوع للقائمة</a>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}خطأ في النظام — سجل المخزن{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center; padding:2.5rem 1rem;">
+  <h1>حدث خطأ غير متوقع</h1>
+  <p style="color:var(--ink-soft); margin:.6rem 0 1.2rem;">
+    نعتذر، حدث خطأ أثناء تنفيذ طلبك. حاول مرة أخرى، وإن استمرت المشكلة
+    تواصل مع مسؤول النظام.
+  </p>
+  {% if user %}
+  <a class="btn" href="{{ url_for('dashboard.index') }}">العودة للوحة التحكم</a>
+  {% else %}
+  <a class="btn" href="{{ url_for('auth.login') }}">تسجيل الدخول</a>
+  {% endif %}
+</div>
+{% endblock %}

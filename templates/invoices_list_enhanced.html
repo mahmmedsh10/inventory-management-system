@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="actions">
+  <a class="btn" href="{{ url_for('purchases.new' if kind == 'purchase' else 'disbursement.new') }}">
+    + فاتورة جديدة</a>
+</div>
+<input type="text" placeholder="🔍 بحث برقم الفاتورة أو المورد..." 
+       data-table-search="#invoices-table" data-search-count="#invoices-count">
+<div class="search-count" id="invoices-count">النتائج: {{ rows|length }}</div>
+<div class="table-wrap">
+<table id="invoices-table">
+  <thead>
+    <tr><th>الرقم</th><th>{{ 'المورد' if kind == 'purchase' else 'الجهة' }}</th>
+        <th>التاريخ</th><th class="num">الإجمالي</th><th>الحالة</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr data-search-text="{{ r['invoice_number'] }} {{ r['supplier_name'] or '' }} {{ r['status'] }}">
+      <td class="num">{{ r['invoice_number'] }}</td>
+      <td>{{ r['supplier_name'] or '—' }}</td>
+      <td class="num">{{ r['invoice_date'] }}</td>
+      <td class="num">{{ '%.2f'|format(r['total']) }}</td>
+      <td>
+        <span class="stamp {{ 'stamp-draft' if r['status'] == 'مسودة'
+                              else 'stamp-approved' if r['status'] == 'معتمدة'
+                              else 'stamp-cancelled' }}">{{ r['status'] }}</span>
+      </td>
+      <td><a class="btn btn-sm btn-ghost"
+             href="{{ url_for('purchases.view' if kind == 'purchase' else 'disbursement.view', invoice_id=r['invoice_id']) }}">عرض</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

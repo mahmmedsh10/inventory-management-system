@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}الرئيسية — سجل المخزن{% endblock %}
+{% block content %}
+<h1>لوحة التحكم</h1>
+
+<div class="detailed-stats-heading"><h2>📊 الإحصائيات التفصيلية</h2></div>
+<div class="detailed-stats-grid">
+  <a class="stat-card blue" href="{{ url_for('dashboard.details_total_items') }}">
+    <span class="stat-icon">📦</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['total_items'] }}</span>
+      <span class="stat-title">إجمالي الأصناف</span>
+      <span class="stat-desc">العدد الكلي للأصناف المسجلة</span>
+    </span>
+  </a>
+
+  <a class="stat-card green" href="{{ url_for('dashboard.details_available_items') }}">
+    <span class="stat-icon">✅</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['available_items'] }}</span>
+      <span class="stat-title">الأصناف المتوفرة</span>
+      <span class="stat-desc">رصيدها الحالي أكبر من صفر</span>
+    </span>
+  </a>
+
+  <a class="stat-card red" href="{{ url_for('dashboard.details_out_of_stock') }}">
+    <span class="stat-icon">⛔</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['out_of_stock_items'] }}</span>
+      <span class="stat-title">الأصناف غير المتوفرة</span>
+      <span class="stat-desc">نفد رصيدها بالكامل</span>
+    </span>
+  </a>
+
+  <a class="stat-card blue" href="{{ url_for('dashboard.details_total_stock') }}">
+    <span class="stat-icon">📊</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['total_stock_quantity'] }}</span>
+      <span class="stat-title">إجمالي كمية المخزون</span>
+      <span class="stat-desc">مجموع الكميات المتاحة حالياً</span>
+    </span>
+  </a>
+
+  <a class="stat-card orange" href="{{ url_for('dashboard.details_issued_items') }}">
+    <span class="stat-icon">📤</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['total_issued_quantity'] }}</span>
+      <span class="stat-title">إجمالي المصروف</span>
+      <span class="stat-desc">من فواتير الصرف المعتمدة فقط</span>
+    </span>
+  </a>
+
+  <a class="stat-card purple" href="{{ url_for('dashboard.details_expired_items') }}">
+    <span class="stat-icon">☠️</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['expired_items'] }}</span>
+      <span class="stat-title">الأصناف المنتهية</span>
+      <span class="stat-desc">لديها دفعات منتهية ولا تزال بالمخزون</span>
+    </span>
+  </a>
+
+  <a class="stat-card yellow" href="{{ url_for('dashboard.details_expiring_soon') }}">
+    <span class="stat-icon">⏰</span>
+    <span class="stat-body">
+      <span class="stat-num">{{ detailed_stats['expiring_soon_items'] }}</span>
+      <span class="stat-title">تنتهي قريباً</span>
+      <span class="stat-desc">خلال 30 يوماً القادمة</span>
+    </span>
+  </a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat"><div class="num">{{ stats['items'] }}</div><div class="lbl">أصناف نشطة</div></div>
+  <div class="stat warn"><div class="num">{{ stats['purchases_draft'] }}</div><div class="lbl">مسودات شراء</div></div>
+  <div class="stat warn"><div class="num">{{ stats['disbursements_draft'] }}</div><div class="lbl">مسودات صرف</div></div>
+  <div class="stat danger"><div class="num">{{ stats['writeoffs_draft'] }}</div><div class="lbl">أذونات إعدام معلّقة</div></div>
+  <div class="stat danger"><div class="num">{{ '%.2f'|format(writeoff_losses) }}</div><div class="lbl">إجمالي خسائر الإعدام</div></div>
+</div>
+
+<div class="card">
+  <h2>🔔 تنبيهات المخزون</h2>
+  {% if not low_stock %}
+    <p>لا توجد أصناف منخفضة الرصيد. ✅</p>
+  {% else %}
+    {% for a in low_stock %}
+    <div class="alert-row">
+      <span>{{ '🔴' if a['stock_status'] == 'نفاد' else '🟠' }} {{ a['item_name'] }}</span>
+      <span class="alert-detail">الكمية: {{ a['quantity'] }} / الحد: {{ a['reorder_level'] }}</span>
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('purchases.new') }}">فاتورة شراء</a>
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>⏳ تنبيهات الصلاحية</h2>
+  {% if not expiry %}
+    <p>لا توجد دفعات منتهية أو قريبة من الانتهاء. ✅</p>
+  {% else %}
+    {% for a in expiry %}
+    <div class="alert-row">
+      <span>{{ '🔴' if a['expiry_status'] == 'منتهي الصلاحية' else '🟡' }}
+            {{ a['item_name'] }}
+            {% if a['batch_number'] %}<small>(دفعة {{ a['batch_number'] }})</small>{% endif %}</span>
+      <span class="alert-detail">الكمية: {{ a['quantity'] }} / الأيام: {{ a['days_to_expiry'] }}</span>
+      {% if a['expiry_status'] == 'منتهي الصلاحية' %}
+      <a class="btn btn-sm btn-danger"
+         href="{{ url_for('writeoff.new', item_id=a['item_id'], qty=a['quantity'], reason='منتهي الصلاحية') }}">
+         إذن إعدام</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>📦 أكثر الأصناف صرفاً</h2>
+  {% if not top_disbursed %}
+    <p>لا توجد عمليات صرف معتمدة بعد.</p>
+  {% else %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>الصنف</th><th class="num">الكمية المصروفة</th>
+          <th class="num">القيمة</th><th class="num">عدد الفواتير</th></tr>
+    </thead>
+    <tbody>
+      {% for d in top_disbursed %}
+      <tr>
+        <td>{{ d['item_name'] }}</td>
+        <td class="num">{{ d['total_disbursed_qty'] }}</td>
+        <td class="num">{{ '%.2f'|format(d['total_disbursed_value'] or 0) }}</td>
+        <td class="num">{{ d['disbursement_count'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>🗑️ أكثر الأصناف إعداماً</h2>
+  {% if not top_writeoff %}
+    <p>لا توجد عمليات إعدام معتمدة بعد.</p>
+  {% else %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>الصنف</th><th class="num">الكمية المُعدَمة</th>
+          <th class="num">قيمة الخسارة</th><th class="num">عدد الأذونات</th></tr>
+    </thead>
+    <tbody>
+      {% for w in top_writeoff %}
+      <tr>
+        <td>{{ w['item_name'] }}</td>
+        <td class="num">{{ w['total_writeoff_qty'] }}</td>
+        <td class="num">{{ '%.2f'|format(w['total_writeoff_value'] or 0) }}</td>
+        <td class="num">{{ w['writeoff_count'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>📊 أكثر الأصناف حركة</h2>
+  {% if not top_movements %}
+    <p>لا توجد بيانات حركة كافية بعد.</p>
+  {% else %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>الصنف</th><th class="num">إجمالي المُشترى</th>
+          <th class="num">إجمالي المصروف</th><th class="num">الرصيد الحالي</th></tr>
+    </thead>
+    <tbody>
+      {% for m in top_movements %}
+      <tr>
+        <td>{{ m['item_name'] }}</td>
+        <td class="num">{{ m['purchased_qty'] }}</td>
+        <td class="num">{{ m['disbursed_qty'] }}</td>
+        <td class="num">{{ m['current_stock'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

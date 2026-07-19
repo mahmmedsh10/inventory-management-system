@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل إذن إعدام' if order else 'إذن إعدام جديد' }} — سجل المخزن{% endblock %}
+{% block content %}
+<h1>{{ 'تعديل إذن إعدام ' + order['order_number'] if order else 'إذن إعدام جديد' }}</h1>
+<form method="post">
+<div class="card">
+  <div class="form-grid">
+    <div>
+      <label>سبب الإعدام *</label>
+      <select name="reason" required>
+        <option value="">— اختر —</option>
+        {% for r in reasons %}
+        <option value="{{ r }}"
+          {% if (order and order['reason'] == r) or (prefill and prefill['reason'] == r) %}selected{% endif %}>
+          {{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>التاريخ</label>
+      <input type="date" name="writeoff_date" value="{{ order['writeoff_date'] if order else today }}">
+    </div>
+  </div>
+  <div class="form-row">
+    <label>ملاحظات (تفاصيل السبب، محضر اللجنة، ...)</label>
+    <input name="notes" value="{{ order['notes'] if order else '' }}">
+  </div>
+</div>
+
+<div class="card">
+  <h2>الأصناف المطلوب إعدامها</h2>
+  <p style="color:var(--ink-soft); font-size:.85rem;">تُحتسب التكلفة تلقائياً من آخر سعر شراء للصنف.</p>
+  <div id="rows" data-row-template="row-tmpl" data-add-btn="#add-row"
+       {% if prefill %}data-prefill-id="{{ prefill['item_id'] }}"
+       data-prefill-name="{{ prefill['item_name'] }}"
+       data-prefill-qty="{{ prefill['qty'] }}"{% endif %}>
+    {% for d in details %}
+    <div class="invoice-row form-grid" style="align-items:end; border-bottom:1px dashed var(--paper-line); padding-bottom:.6rem;">
+      <div class="combo" data-show-qty="1"
+           data-options='[{% for i in items %}{"id": {{ i["item_id"] }}, "name": {{ i["item_name"] | tojson }}, "qty": {{ i["quantity"] }}}{{ "," if not loop.last }}{% endfor %}]'>
+        <label>الصنف *</label>
+        <input type="text" autocomplete="off" value="{{ d['item_name'] }}">
+        <input type="hidden" name="item_id[]" value="{{ d['item_id'] }}">
+        <div class="combo-list"></div>
+      </div>
+      <div><label>الكمية *</label>
+        <div class="stepper">
+          <button type="button" data-step="-1">−</button>
+          <input type="number" name="quantity[]" min="1" value="{{ d['quantity'] }}">
+          <button type="button" data-step="1">+</button>
+        </div>
+      </div>
+      <div><button class="btn btn-sm btn-danger remove-row">حذف الصف</button></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions"><button class="btn btn-ghost" id="add-row">+ إضافة صف</button></div>
+</div>
+
+<template id="row-tmpl">
+  <div class="invoice-row form-grid" style="align-items:end; border-bottom:1px dashed var(--paper-line); padding-bottom:.6rem;">
+    <div class="combo" data-show-qty="1"
+         data-options='[{% for i in items %}{"id": {{ i["item_id"] }}, "name": {{ i["item_name"] | tojson }}, "qty": {{ i["quantity"] }}}{{ "," if not loop.last }}{% endfor %}]'>
+      <label>الصنف *</label>
+      <input type="text" placeholder="ابحث عن صنف..." autocomplete="off">
+      <input type="hidden" name="item_id[]">
+      <div class="combo-list"></div>
+    </div>
+    <div><label>الكمية *</label>
+      <div class="stepper">
+        <button type="button" data-step="-1">−</button>
+        <input type="number" name="quantity[]" min="1" value="1">
+        <button type="button" data-step="1">+</button>
+      </div>
+    </div>
+    <div><button class="btn btn-sm btn-danger remove-row">حذف الصف</button></div>
+  </div>
+</template>
+
+<div class="actions">
+  <button class="btn btn-ok">💾 حفظ {{ 'التعديلات' if order else 'كمسودة' }}</button>
+  <a class="btn btn-ghost" href="{{ url_for('writeoff.list') }}">رجوع</a>
+</div>
+</form>
+{% endblock %}
